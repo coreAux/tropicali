@@ -57,12 +57,12 @@ function watchSass() {
 }
 
 function gitDeploy(cb) {
-    ghpages.publish("dist", cb())
+    ghpages.publish('dist', cb())
 }
 
 exports.build = series(html, mySassFunction, fonts, images, watchSass)
 exports.default = series(html, mySassFunction, fonts, images, watchSass)
-exports.gitDeploy = series(gitDeploy)
+exports.deploy = series(gitDeploy)
 task(html)
 task(mySassFunction)
 task(fonts)
