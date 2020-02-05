@@ -9,6 +9,8 @@ const browserSync = require('browser-sync').create()
 
 const imagemin = require('gulp-imagemin')
 
+const ghpages = require('gh-pages')
+
 sass.compiler = require('node-sass')
 
 function mySassFunction() {
@@ -54,10 +56,16 @@ function watchSass() {
     watch("src/img/*", series(images))
 }
 
+function gitDeploy(cb) {
+    ghpages.publish("dist", cb())
+}
+
 exports.build = series(html, mySassFunction, fonts, images, watchSass)
 exports.default = series(html, mySassFunction, fonts, images, watchSass)
+exports.gitDeploy = series(gitDeploy)
 task(html)
 task(mySassFunction)
 task(fonts)
 task(images)
 task(watchSass)
+task(gitDeploy)
