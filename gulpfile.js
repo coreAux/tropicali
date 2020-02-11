@@ -1,21 +1,42 @@
-const { series, watch, src, dest, task } = require("gulp")
+const { series, parallel, watch, src, dest, task } = require("gulp")
 
-const gulp = require('gulp')
-const sass = require('gulp-sass')
+// CSS
+//const sass = require('gulp-sass')
+const postCSS = require('gulp-postcss')
 const cleanCSS = require('gulp-clean-css')
 const sourcemaps = require('gulp-sourcemaps')
+const concat = require('gulp-concat')
 
+// Browser refresh
 const browserSync = require('browser-sync').create()
 
+// Images
 const imagemin = require('gulp-imagemin')
 
-sass.compiler = require('node-sass')
+// Github
+const ghpages = require('gh-pages')
 
-function mySassFunction() {
+//sass.compiler = require('node-sass')
+
+function myCssFunction() {
     // we want to run "sass css/app.scss app.css --watch"
-    return src("src/css/app.scss")
+    return src([
+        "src/css/reset.css",
+        "src/css/typography.css",
+        "src/css/app.css"
+    ])
         .pipe(sourcemaps.init())
-        .pipe(sass())
+        .pipe(
+            postCSS([
+                require('postcss-preset-env')({
+                    stage: 1,
+                    browsers: ['IE 11', 'last 2 versions']
+                }),
+                require('autoprefixer')
+            ])
+        )
+//        .pipe(sass())
+        .pipe(concat('app.css'))
         .pipe(
             cleanCSS({
                 compatibility: 'ie8'
@@ -49,15 +70,15 @@ function watchSass() {
         }
     })
     watch("src/*.html", series(html)).on("change", browserSync.reload)
-    watch("src/css/app.scss", series(mySassFunction))
+    watch("src/css/*", series(myCssFunction))
     watch("src/fonts/*", series(fonts))
     watch("src/img/*", series(images))
 }
 
-exports.build = series(html, mySassFunction, fonts, images, watchSass)
-exports.default = series(html, mySassFunction, fonts, images, watchSass)
-task(html)
-task(mySassFunction)
-task(fonts)
-task(images)
-task(watchSass)
+function gitDeploy(cb) {
+    ghpages.publish("dist", cb())
+}
+
+exports.build = series(html, myCssFunction, fonts, images, watchSass)
+exports.default = series(html, myCssFunction, fonts, images, watchSass)
+exports.deploy = series(gitDeploy)
